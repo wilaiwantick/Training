@@ -24,7 +24,13 @@ userSchema.methods.checkPass = function (plain) {
 
 
 const productSchema = new mongoose.Schema(
-    { name: String, price: Number, stock: Number, isActive: { default: true, type: Boolean } },
+    {
+        name: String, price: Number,
+        stock: Number, isActive: { default: true, type: Boolean }, image: {
+            type: String,
+            default: "default.png"
+        }
+    },
     { timestamps: true }
 );
 

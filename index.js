@@ -4,11 +4,13 @@ const mongoose = require('mongoose');
 const morgan = require('morgan');
 const cors = require('cors');
 const router = require('./routes');
+const path = require("path");
 
 const app = express();
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 //mongoDB
 mongoose.set('strictQuery', true);
