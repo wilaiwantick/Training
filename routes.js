@@ -2,10 +2,6 @@ const express = require('express');
 const { User, Product, Order } = require('./models');
 const { auth, adminOnly } = require('./middleware');
 const { makeToken, ok, bad } = require('./utils');
-const { uploadProductImage } = require("./uploadController.js");
-
-
-const path = require("path");
 
 const router = express.Router();
 
@@ -68,50 +64,17 @@ router.get('/api/v1/products/:id', async (req, res) => {
     if (!p) return res.status(404).json({ status: 404, message: 'product_not_found', data: null });
     ok(res, p);
 });
-
-// ✅ เพิ่ม uploadProductImage เข้าใน POST
-router.post('/api/v1/products', auth, adminOnly, uploadProductImage, async (req, res) => {
-    try {
-        const { name, price, stock } = req.body || {};
-        if (!name || price == null || stock == null) return bad(res, 'missing_fields');
-
-        const newProduct = {
-            name,
-            price,
-            stock,
-            isActive: true
-        };
-
-        if (req.file) {
-            newProduct.image = req.file.filename; // เก็บชื่อไฟล์ใน DB
-        }
-
-        const p = await Product.create(newProduct);
-        res.status(201).json({ status: 201, message: 'created', data: p });
-    } catch (err) {
-        console.error("Error creating product:", err);
-        res.status(500).json({ status: 500, message: 'server_error', data: null });
-    }
+router.post('/api/v1/products', auth, adminOnly, async (req, res) => {
+    const { name, price, stock } = req.body || {};
+    if (!name || price == null || stock == null) return bad(res, 'missing_fields');
+    const p = await Product.create({ name, price, stock });
+    res.status(201).json({ status: 201, message: 'created', data: p });
 });
-
-// ✅ PUT ก็เพิ่ม uploadProductImage เช่นกัน
-router.put('/api/v1/products/:id', auth, adminOnly, uploadProductImage, async (req, res) => {
-    try {
-        const updateData = req.body;
-
-        if (req.file) {
-            updateData.image = req.file.filename;
-        }
-
-        const p = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
-        if (!p) return res.status(404).json({ status: 404, message: 'product_not_found', data: null });
-        ok(res, p);
-    } catch (err) {
-        console.error("Error updating product:", err);
-        res.status(500).json({ status: 500, message: 'server_error', data: null });
-    }
+router.put('/api/v1/products/:id', auth, adminOnly, async (req, res) => {
+    const p = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!p) return res.status(404).json({ status: 404, message: 'product_not_found', data: null });
+    ok(res, p);
 });
-
 router.delete('/api/v1/products/:id', auth, adminOnly, async (req, res) => {
     const p = await Product.findByIdAndDelete(req.params.id);
     if (!p) return res.status(404).json({ status: 404, message: 'product_not_found', data: null });
